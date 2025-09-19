@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>MoneyGame</title>
+  <style>
+    :root{font-family:system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial;}
+    body{margin:0;padding:16px;background:#0f172a;color:#e6eef8}
+    .wrap{max-width:980px;margin:0 auto;display:grid;grid-template-columns:320px 1fr;gap:16px}
+    .card{background:linear-gradient(180deg,#0b1120, #071022);border-radius:12px;padding:12px;box-shadow:0 6px 18px rgba(0,0,0,0.6);}
+    h2{margin:6px 0 12px;font-size:18px}
+    .stats{display:flex;flex-direction:column;gap:6px}
+    .bar{height:12px;border-radius:6px;background:#0b1220;overflow:hidden}
+    .bar > i{display:block;height:100%}
+    .controls{display:flex;flex-wrap:wrap;gap:8px}
+    button{background:#1f2937;border:0;padding:8px 10px;border-radius:8px;color:#e6eef8;cursor:pointer}
+    button:active{transform:translateY(1px)}
+    .log{height:220px;overflow:auto;background:#071322;padding:8px;border-radius:8px}
+    .row{display:flex;gap:8px;align-items:center}
+    .shop .item{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed rgba(255,255,255,0.03)}
+    .small{font-size:13px;color:#9fb0c9}
+    .center{display:flex;align-items:center;justify-content:center}
+    .big{font-size:22px}
+    .inventory{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+    .pill{background:#0b1622;padding:6px 8px;border-radius:999px;font-size:13px}
+    .actions button{min-width:120px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h2>Warrior</h2>
+      <div class="stats">
+        <div class="row"><strong id="name">Hero</strong><span class="small"> (Level <span id="playerLevel">1</span>)</span></div>
+        <div class="row"><div style="flex:1"><div class="small">HP <span id="hpText"></span></div><div class="bar"><i id="hpBar" style="width:100%;background:linear-gradient(90deg,#ef4444,#f97316)"></i></div></div></div>
+        <div class="row"><div style="flex:1"><div class="small">Stamina <span id="staminaText"></span></div><div class="bar"><i id="stBar" style="width:100%;background:linear-gradient(90deg,#60a5fa,#38bdf8)"></i></div></div></div>
+        <div class="row"><div style="flex:1"><div class="small">XP <span id="xpText"></span></div><div class="bar"><i id="xpBar" style="width:0%;background:linear-gradient(90deg,#a78bfa,#7c3aed)"></i></div></div></div>
+        <div class="row small"><div style="flex:1">Coins: <strong id="coins">0</strong></div><div>Level: <strong id="playerLevel2">1</strong></div></div>
+      </div>
+
+      <h2>Attributes</h2>
+      <div class="small">Strength: <span id="strText"></span>  •  Agility: <span id="agiText"></span>  •  Defense: <span id="defText"></span>  •  Intelligence: <span id="intText"></span></div>
+
+      <h2>Inventory</h2>
+      <div class="inventory" id="inventory">
+        <!-- items here -->
+      </div>
+
+      <h2>Upgrades & Shop</h2>
+      <div class="shop small">
+        <div class="item"><div>Sword (weapon) - buy for 20 coins</div><div><button onclick="buy('sword')">Buy</button></div></div>
+        <div class="item"><div>Shield (armor) - buy for 20 coins</div><div><button onclick="buy('shield')">Buy</button></div></div>
+        <div class="item"><div>Arches (arrows) - buy for 20 coins</div><div><button onclick="buy('arches')">Buy</button></div></div>
+        <div class="item"><div>Potion (heals 50) - buy for 50 coins</div><div><button onclick="buy('potion')">Buy</button></div></div>
+        <div class="item"><div>Upgrade stat (+10 to chosen stat) - cost depends on current level</div><div><button onclick="openUpgrade()">Upgrade</button></div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Battle & Map — Infinite Levels</h2>
+      <div class="row">
+        <div style="flex:1">
+          <div class="row"><div style="flex:1"><strong id="enemyName">Beast Lvl 1</strong> <span class="small">(HP: <span id="enemyHpText"></span>)</span></div><div class="small">Enemy Level: <span id="enemyLevel">1</span></div></div>
+          <div class="row"><div style="flex:1"><div class="small">Enemy HP</div><div class="bar"><i id="enemyHpBar" style="width:100%;background:linear-gradient(90deg,#ef4444,#b91c1c)"></i></div></div></div>
+        </div>
+      </div>
+
+      <div style="margin-top:8px" class="actions">
+        <div class="controls">
+          <button onclick="playerAction('attack')">Attack (stamina 10)</button>
+          <button onclick="playerAction('power')">Power Attack (stamina 25)</button>
+          <button onclick="playerAction('defend')">Defend (stamina 5)</button>
+          <button onclick="playerAction('run')">Run Away (stamina 15)</button>
+          <button onclick="usePotion()">Use Potion</button>
+        </div>
+      </div>
+
+      <div style="margin-top:12px" class="row">
+        <div style="flex:1">
+          <div class="log" id="log"></div>
+        </div>
+        <div style="width:260px;margin-left:8px">
+          <div class="card" style="padding:10px;background:linear-gradient(180deg,#071022,#061018);">
+            <div class="small center"><div><strong>Actions</strong></div></div>
+            <div class="small" style="margin-top:8px">You can: attack, defend, run, or power attack. Stamina is required for actions and regenerates after each full turn.</div>
+            <hr>
+            <div class="small">Level rewards: coins and XP. Defeat enemies to advance infinite levels — each level scales up.</div>
+            <div style="margin-top:8px" class="small"><strong>Tips:</strong> Buy items for 20 coins each (potions cost 50). Upgrade stats to improve damage or defense.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Simple single-file MoneyGame
+    const state = {
+      player: {
+        name: 'Hero',
+        level: 1,
+        xp: 0,
+        xpToLevel: 100,
+        maxHp: 200,
+        hp: 200,
+        staminaMax: 100,
+        stamina: 100,
+        coins: 60,
+        stats: { str: 100, agi: 80, def: 50, int: 40 },
+        inventory: { sword:0, shield:0, arches:0, potion:0 }
+      },
+      enemy: null,
+      enemyLevel: 1,
+      logEl: null,
+      enemyTurnBlocked: false,
+    }
+
+    function rand(min,max){return Math.floor(Math.random()*(max-min+1))+min}
+
+    function createEnemy(level){
+      const baseHp = 80 + (level-1)*30 + Math.floor(level*10*Math.random());
+      const hp = baseHp;
+      const name = ['Giant Rat','Dire Wolf','Goblin','Orc','Troll','Wyvern','Beast'][Math.min(level-1,6)] || 'Ferocious Beast';
+      const enemy = {
+        name: name + ' Lvl ' + level,
+        level,
+        hp, maxHp: hp,
+        str: 20 + level*8,
+        agi: 10 + level*5,
+        def: 5 + Math.floor(level*3),
+      }
+      return enemy;
+    }
+
+    function refreshUI(){
+      document.getElementById('hpText').innerText = `${state.player.hp}/${state.player.maxHp}`;
+      document.getElementById('hpBar').style.width = Math.max(0, (state.player.hp/state.player.maxHp*100)) + '%';
+      document.getElementById('staminaText').innerText = `${Math.floor(state.player.stamina)}/${state.player.staminaMax}`;
+      document.getElementById('stBar').style.width = Math.max(0, (state.player.stamina/state.player.staminaMax*100)) + '%';
+      document.getElementById('xpText').innerText = `${state.player.xp}/${state.player.xpToLevel}`;
+      document.getElementById('xpBar').style.width = Math.min(100,(state.player.xp/state.player.xpToLevel*100)) + '%';
+      document.getElementById('strText').innerText = state.player.stats.str;
+      document.getElementById('agiText').innerText = state.player.stats.agi;
+      document.getElementById('defText').innerText = state.player.stats.def;
+      document.getElementById('intText').innerText = state.player.stats.int;
+      document.getElementById('coins').innerText = state.player.coins;
+      document.getElementById('playerLevel').innerText = state.player.level;
+      document.getElementById('playerLevel2').innerText = state.player.level;
+      // inventory
+      const inv = document.getElementById('inventory'); inv.innerHTML='';
+      for(const k of Object.keys(state.player.inventory)){
+        const v = state.player.inventory[k];
+        const div = document.createElement('div'); div.className='pill'; div.innerText = `${k}: ${v}`; inv.appendChild(div);
+      }
+      if(state.enemy){
+        document.getElementById('enemyName').innerText = state.enemy.name;
+        document.getElementById('enemyLevel').innerText = state.enemy.level;
+        document.getElementById('enemyHpText').innerText = `${state.enemy.hp}/${state.enemy.maxHp}`;
+        document.getElementById('enemyHpBar').style.width = Math.max(0,(state.enemy.hp/state.enemy.maxHp*100)) + '%';
+      }
+    }
+
+    function log(text){
+      const el = document.getElementById('log');
+      const p = document.createElement('div'); p.innerText = text; el.prepend(p);
+    }
+
+    function start(){
+      state.enemy = createEnemy(state.enemyLevel);
+      state.logEl = document.getElementById('log');
+      log('Welcome to MoneyGame! Defeat beasts to earn coins and XP.');
+      refreshUI();
+    }
+
+    function playerAction(action){
+      if(!state.enemy) return;
+      const p = state.player;
+      const e = state.enemy;
+      // stamina costs
+      const costs = { attack:10, power:25, defend:5, run:15 };
+      const cost = costs[action] || 0;
+      if(p.stamina < cost){ log('Not enough stamina for '+action); return; }
+      // perform action
+      if(action==='attack'){
+        p.stamina -= cost;
+        const base = Math.max(1, Math.floor(p.stats.str*0.2 + rand(0, p.stats.agi*0.1)));
+        const weaponBonus = p.inventory.sword * 6;
+        const dmg = Math.max(1, base + weaponBonus - Math.floor(e.def*0.1));
+        e.hp -= dmg;
+        log(`You attack and deal ${dmg} damage.`);
+      } else if(action==='power'){
+        p.stamina -= cost;
+        const base = Math.max(1, Math.floor(p.stats.str*0.45 + rand(0, p.stats.agi*0.15)));
+        const weaponBonus = p.inventory.sword * 12;
+        const dmg = Math.max(1, base + weaponBonus - Math.floor(e.def*0.05));
+        e.hp -= dmg;
+        log(`Power attack! You deal ${dmg} damage (cost ${cost} stamina).`);
+      } else if(action==='defend'){
+        p.stamina -= cost;
+        state.enemyTurnBlocked = true;
+        log('You brace yourself to reduce incoming damage this turn.');
+      } else if(action==='run'){
+        p.stamina -= cost;
+        const chance = Math.min(90, 30 + p.stats.agi/2 - e.level*3 + rand(-10,10));
+        if(rand(1,100) <= chance){
+          log('You successfully ran away! You lose a little XP as cost.');
+          p.xp = Math.max(0, p.xp - 5);
+          nextEnemy();
+          return;
+        } else {
+          log('Failed to run away! The enemy seizes the opportunity.');
+        }
+      }
+
+      // maybe enemy dies
+      if(e.hp <= 0){
+        winEnemy();
+        return;
+      }
+
+      // enemy turn
+      enemyTurn();
+      // end of turn regen
+      endOfTurn();
+      refreshUI();
+    }
+
+    function enemyTurn(){
+      const e = state.enemy; const p = state.player;
+      if(!e) return;
+      // simple AI
+      const choice = rand(1,100);
+      let dmg = 0;
+      if(choice < 70){
+        // attack
+        const base = Math.max(1, Math.floor(e.str*0.2 + rand(0,e.agi*0.1)));
+        dmg = Math.max(1, base - Math.floor(p.stats.def*0.1) - (p.inventory.shield*2));
+        if(state.enemyTurnBlocked){ dmg = Math.floor(dmg/2); }
+        p.hp -= dmg;
+        log(`${e.name} hits you for ${dmg} damage.`);
+      } else {
+        // heavy hit
+        const base = Math.max(1, Math.floor(e.str*0.35 + rand(0,e.agi*0.15)));
+        dmg = Math.max(1, base - Math.floor(p.stats.def*0.08));
+        if(state.enemyTurnBlocked) dmg = Math.floor(dmg/2);
+        p.hp -= dmg;
+        log(`${e.name} power strikes you for ${dmg} damage.`);
+      }
+      state.enemyTurnBlocked = false;
+
+      if(p.hp <= 0){
+        log('You have been defeated. You lose half your coins and return to level 1.');
+        p.coins = Math.floor(p.coins/2);
+        p.hp = Math.floor(p.maxHp/2);
+        p.stamina = p.staminaMax;
+        p.xp = 0; p.level = 1; p.xpToLevel = 100; state.enemyLevel = 1;
+        state.enemy = createEnemy(state.enemyLevel);
+      }
+      refreshUI();
+    }
+
+    function endOfTurn(){
+      // regen stamina small amount
+      const p = state.player;
+      p.stamina = Math.min(p.staminaMax, p.stamina + 12);
+    }
+
+    function winEnemy(){
+      const p = state.player; const e = state.enemy;
+      const coinGain = 10 + e.level*8 + rand(0,10);
+      const xpGain = 20 + e.level*12 + rand(0,10);
+      p.coins += coinGain;
+      p.xp += xpGain;
+      log(`You defeated ${e.name}! +${coinGain} coins, +${xpGain} XP.`);
+      // Chance to drop items
+      if(rand(1,100) <= Math.min(50, 20 + e.level*3)){
+        const it = ['sword','shield','arches'][rand(0,2)];
+        p.inventory[it] += 1;
+        log(`You found 1 ${it} on the beast.`);
+      }
+      // level up check
+      while(p.xp >= p.xpToLevel){ p.xp -= p.xpToLevel; p.level++; p.xpToLevel = Math.floor(p.xpToLevel * 1.25); p.maxHp += 20; p.hp = p.maxHp; p.staminaMax += 5; p.stamina = p.staminaMax; log('Leveled up! Now level '+p.level); }
+      state.enemyLevel++;
+      nextEnemy();
+      refreshUI();
+    }
+
+    function nextEnemy(){
+      state.enemy = createEnemy(state.enemyLevel);
+      log('A new foe appears: ' + state.enemy.name);
+      refreshUI();
+    }
+
+    function buy(item){
+      const p = state.player;
+      const costs = { sword:20, shield:20, arches:20, potion:50 };
+      const cost = costs[item] || 20;
+      if(p.coins < cost){ log('Not enough coins to buy '+item); return; }
+      p.coins -= cost; p.inventory[item] = (p.inventory[item] || 0) + 1;
+      log('Bought 1 ' + item + ' for ' + cost + ' coins.');
+      refreshUI();
+    }
+
+    function usePotion(){
+      const p = state.player;
+      if(p.inventory.potion <= 0){ log('No potions in inventory.'); return; }
+      p.inventory.potion -= 1; p.hp = Math.min(p.maxHp, p.hp + 50);
+      log('You used a potion and healed 50 HP.');
+      refreshUI();
+    }
+
+    function openUpgrade(){
+      const p = state.player; const cost = 30 + p.level*10;
+      const stat = prompt(`Which stat to upgrade? type one of: str, agi, def, int\nCost: ${cost} coins\n(You will get +10 to chosen stat)`);
+      if(!stat) return; const s = stat.trim().toLowerCase();
+      if(!['str','agi','def','int'].includes(s)){ alert('Invalid stat'); return; }
+      if(p.coins < cost){ alert('Not enough coins'); return; }
+      p.coins -= cost; p.stats[s] += 10; log(`Upgraded ${s} by +10 for ${cost} coins.`); refreshUI();
+    }
+
+    // keyboard shortcuts for convenience
+    window.addEventListener('keydown',(e)=>{
+      if(e.key==='a') playerAction('attack');
+      if(e.key==='p') playerAction('power');
+      if(e.key==='d') playerAction('defend');
+      if(e.key==='r') playerAction('run');
+    });
+
+    start();
+  </script>
+</body>
+</html>
