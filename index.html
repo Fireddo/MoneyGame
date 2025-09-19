@@ -26,6 +26,12 @@
     .pill{background:#0b1622;padding:6px 8px;border-radius:999px;font-size:13px}
     .actions button{min-width:120px}
   </style>
+  <link rel="manifest" href="manifest.json">
+<script>
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("sw.js");
+  }
+</script>
 </head>
 <body>
   <div class="wrap">
